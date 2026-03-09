@@ -172,21 +172,21 @@ const translations = {
         desc: ["Big Data Engineer en BCI", "Ingeniero Civil Informatico UdeC", "MBA UDD especializado en Innovacion", "Master en Transformacion Digital, La Salle Barcelona"],
         expert: "Experto en automatizacion, Big Data e Inteligencia Artificial."
       },
+      juancarlos: {
+        name: "Juan Carlos Hernandez",
+        role: "CMO",
+        badge: "Crecimiento y Posicionamiento",
+        desc: ["Ingeniero Civil Informatico UdeC", "Consultor senior en innovacion y transformacion digital"],
+        expert: "Especialista en estrategia de producto, desarrollo agil y validacion de mercado."
+      },
       julio: {
-        name: "Julio Zapata Diaz",
+        name: "Julio Zapata",
         role: "CTO",
         badge: "Finanzas y Cumplimiento Normativo",
         desc: ["Ingeniero Civil Informatico UdeC", "Desarrollador full-stack y asesor tecnico en proyectos publicos y privados"],
         expert: "Foco en escalabilidad, cumplimiento y desarrollo de soluciones normativas."
       }
     },
-      juancarlos: {
-        name: "Juan Carlos Hernández Contreras",
-        role: "CMO",
-        badge: "Crecimiento y Posicionamiento",
-        desc: ["Ingeniero Civil Informatico UdeC", "Consultor senior en innovacion y transformacion digital"],
-        expert: "Especialista en estrategia de producto, desarrollo agil y validacion de mercado."
-      },
     awards: { 
       title: "Reconocimientos", 
       sub: "Reconocimiento a la innovacion y potencial tecnologico",
@@ -705,7 +705,7 @@ export default function LandingPage() {
                 <CardContent className="p-6 flex flex-col items-center">
                   <div className="w-32 h-32 rounded-full overflow-hidden mx-auto mb-4">
                     <Image
-                      src="https://hebbkx1anhila5yf.public.blob.vercel-storage.com/Captura%20de%20pantalla%202026-02-05%20a%20la%28s%29%202.27.41%E2%80%AFp.m.-vc3oCMHd145xIlcSlYLUkyOISefPLe.png"
+                      src="https://hebbkx1anhila5yf.public.blob.vercel-storage.com/IMG_5153-kZtt3pUZ4YFoPMDepVCetH9uy2hAUs.jpg"
                       alt="Juan Carlos Hernández"
                       width={128}
                       height={128}
@@ -733,7 +733,7 @@ export default function LandingPage() {
                   </div>
                   <div className="flex items-center gap-2 mt-4">
                     <Image
-                      src="https://hebbkx1anhila5yf.public.blob.vercel-storage.com/image-HLNX0p71t1iqLlbsUP7dVxyPMkpKTr.png"
+                      src="https://hebbkx1anhila5yf.public.blob.vercel-storage.com/Captura%20de%20pantalla%202026-02-05%20a%20la%28s%29%202.27.41%E2%80%AFp.m.-vc3oCMHd145xIlcSlYLUkyOISefPLe.png"
                       alt="Escudo institucional"
                       width={32}
                       height={32}
@@ -748,7 +748,7 @@ export default function LandingPage() {
                 <CardContent className="p-6 flex flex-col items-center">
                   <div className="w-32 h-32 rounded-full overflow-hidden mx-auto mb-4">
                     <Image
-                      src="https://hebbkx1anhila5yf.public.blob.vercel-storage.com/IMG_5153-kZtt3pUZ4YFoPMDepVCetH9uy2hAUs.jpg"
+                      src="https://hebbkx1anhila5yf.public.blob.vercel-storage.com/image-HLNX0p71t1iqLlbsUP7dVxyPMkpKTr.png"
                       alt="Julio Zapata"
                       width={128}
                       height={128}
