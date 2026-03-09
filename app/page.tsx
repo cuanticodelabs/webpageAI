@@ -172,13 +172,6 @@ const translations = {
         desc: ["Big Data Engineer en BCI", "Ingeniero Civil Informatico UdeC", "MBA UDD especializado en Innovacion", "Master en Transformacion Digital, La Salle Barcelona"],
         expert: "Experto en automatizacion, Big Data e Inteligencia Artificial."
       },
-      juancarlos: {
-        name: "Juan Carlos Hernandez",
-        role: "CMO",
-        badge: "Crecimiento y Posicionamiento",
-        desc: ["Ingeniero Civil Informatico UdeC", "Consultor senior en innovacion y transformacion digital"],
-        expert: "Especialista en estrategia de producto, desarrollo agil y validacion de mercado."
-      },
       julio: {
         name: "Julio Zapata",
         role: "CTO",
@@ -187,6 +180,13 @@ const translations = {
         expert: "Foco en escalabilidad, cumplimiento y desarrollo de soluciones normativas."
       }
     },
+      juancarlos: {
+        name: "Juan Carlos Hernandez",
+        role: "CMO",
+        badge: "Crecimiento y Posicionamiento",
+        desc: ["Ingeniero Civil Informatico UdeC", "Consultor senior en innovacion y transformacion digital"],
+        expert: "Especialista en estrategia de producto, desarrollo agil y validacion de mercado."
+      },
     awards: { 
       title: "Reconocimientos", 
       sub: "Reconocimiento a la innovacion y potencial tecnologico",
