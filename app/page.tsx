@@ -705,7 +705,7 @@ export default function LandingPage() {
                 <CardContent className="p-6 flex flex-col items-center">
                   <div className="w-32 h-32 rounded-full overflow-hidden mx-auto mb-4">
                     <Image
-                      src="https://hebbkx1anhila5yf.public.blob.vercel-storage.com/IMG_5153-kZtt3pUZ4YFoPMDepVCetH9uy2hAUs.jpg"
+                      src="https://hebbkx1anhila5yf.public.blob.vercel-storage.com/Captura%20de%20pantalla%202026-02-05%20a%20la%28s%29%202.27.41%E2%80%AFp.m.-vc3oCMHd145xIlcSlYLUkyOISefPLe.png"
                       alt="Juan Carlos Hernández"
                       width={128}
                       height={128}
@@ -733,7 +733,7 @@ export default function LandingPage() {
                   </div>
                   <div className="flex items-center gap-2 mt-4">
                     <Image
-                      src="https://hebbkx1anhila5yf.public.blob.vercel-storage.com/Captura%20de%20pantalla%202026-02-05%20a%20la%28s%29%202.27.41%E2%80%AFp.m.-vc3oCMHd145xIlcSlYLUkyOISefPLe.png"
+                      src="https://hebbkx1anhila5yf.public.blob.vercel-storage.com/image-HLNX0p71t1iqLlbsUP7dVxyPMkpKTr.png"
                       alt="Escudo institucional"
                       width={32}
                       height={32}
@@ -748,7 +748,7 @@ export default function LandingPage() {
                 <CardContent className="p-6 flex flex-col items-center">
                   <div className="w-32 h-32 rounded-full overflow-hidden mx-auto mb-4">
                     <Image
-                      src="https://hebbkx1anhila5yf.public.blob.vercel-storage.com/image-HLNX0p71t1iqLlbsUP7dVxyPMkpKTr.png"
+                      src="https://hebbkx1anhila5yf.public.blob.vercel-storage.com/IMG_5153-kZtt3pUZ4YFoPMDepVCetH9uy2hAUs.jpg"
                       alt="Julio Zapata"
                       width={128}
                       height={128}
