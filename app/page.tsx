@@ -173,7 +173,7 @@ const translations = {
         expert: "Experto en automatizacion, Big Data e Inteligencia Artificial."
       },
       julio: {
-        name: "Julio Zapata",
+        name: "Julio Zapata Diaz",
         role: "CTO",
         badge: "Finanzas y Cumplimiento Normativo",
         desc: ["Ingeniero Civil Informatico UdeC", "Desarrollador full-stack y asesor tecnico en proyectos publicos y privados"],
@@ -181,7 +181,7 @@ const translations = {
       }
     },
       juancarlos: {
-        name: "Juan Carlos Hernandez",
+        name: "Juan Carlos Hernández Contreras",
         role: "CMO",
         badge: "Crecimiento y Posicionamiento",
         desc: ["Ingeniero Civil Informatico UdeC", "Consultor senior en innovacion y transformacion digital"],
