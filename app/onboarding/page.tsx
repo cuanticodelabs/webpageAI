@@ -12,9 +12,6 @@ import { createChat } from '@n8n/chat';
 import '@n8n/chat/style.css';
 import { v4 as uuidv4 } from 'uuid';
 
-// Generar un ID de sesión aleatorio (hash) globalmente
-const sessionId = uuidv4();
-
 const translations = {
   en: {
     back: "Back",
@@ -192,7 +189,47 @@ const translations = {
   }
 }
 
+// Función para obtener o crear sessionId persistente en localStorage
+// IMPORTANTE: Este mismo sessionId se usa para:
+// 1. Enviar al webhook del formulario (workflow 1 en n8n)
+// 2. Sembrar memoria en n8n (subworkflow)
+// 3. Widget @n8n/chat (Chat Trigger en workflow 2)
+const getOrCreateSessionId = (): string => {
+  if (typeof window === 'undefined') return uuidv4() // SSR fallback
+  
+  const STORAGE_KEY = 'cuanticode_session_id'
+  let storedId = localStorage.getItem(STORAGE_KEY)
+  
+  if (!storedId) {
+    storedId = uuidv4()
+    localStorage.setItem(STORAGE_KEY, storedId)
+  }
+  
+  // Sincronizar con las keys que usa el widget @n8n/chat
+  // Esto asegura que el Chat Trigger reciba el mismo sessionId
+  localStorage.setItem('n8n-chat/sessionId', storedId)
+  localStorage.setItem('sessionId', storedId) // compatibilidad
+  
+  console.log('[v0] SessionId inicializado:', storedId)
+  
+  return storedId
+}
+
+// Función para limpiar sessionId (llamar al completar el proceso)
+// Limpia todas las keys relacionadas para que la próxima visita sea una sesión nueva
+const clearSessionId = (): void => {
+  if (typeof window !== 'undefined') {
+    localStorage.removeItem('cuanticode_session_id')
+    localStorage.removeItem('n8n-chat/sessionId')
+    localStorage.removeItem('sessionId')
+    console.log('[v0] SessionId limpiado de localStorage')
+  }
+}
+
 export default function OnboardingPage() {
+  // Generar o recuperar sessionId persistente (sobrevive recargas de página)
+  const [sessionId] = useState(() => getOrCreateSessionId())
+  
   const [lang, setLang] = useState<'en' | 'es'>('es')
   const t = translations[lang]
   
@@ -248,20 +285,42 @@ export default function OnboardingPage() {
       const response = await fetch("https://n8n.cuanticode.com/webhook-test/onboarding/intake", {
         method: "POST",
         headers: {
-          "Content-Type": "application/json",
-          "Access-Control-Allow-Origin": "*" // Ensure CORS headers are set
+          "Content-Type": "application/json"
         },
         body: JSON.stringify(payload)
       });
 
-      const data = await response.json();
+      console.log("[v0] sendToWebhook - Response status:", response.status)
+      
+      // Manejar respuestas no-JSON graciosamente
+      const responseText = await response.text()
+      let data = null
+      
+      if (responseText) {
+        try {
+          data = JSON.parse(responseText)
+          console.log("[v0] Respuesta del Webhook del formulario:", data)
+          setManzanita(data)
+        } catch (parseError) {
+          console.warn("[v0] Response is not JSON:", responseText)
+        }
+      } else {
+        console.warn("[v0] Empty response from webhook - esto es normal si n8n no tiene Respond to Webhook")
+      }
 
       // Determinar los mensajes iniciales según el idioma seleccionado
       const initialMessages = lang === 'es' 
         ? ['¡Hola! 👋', '¿En qué puedo ayudarte hoy?'] 
         : ['Hello! 👋', 'How can I help you today?'];
 
-      // Usar el Webhook y el ID generado anteriormente para inicializar el asistente
+      // IMPORTANTE: Forzar el sessionId en localStorage ANTES de crear el chat
+      // El widget @n8n/chat lee de 'n8n-chat/sessionId' para enviarlo al Chat Trigger
+      localStorage.setItem('n8n-chat/sessionId', sessionId)
+      localStorage.setItem('sessionId', sessionId)
+      console.log('[v0] SessionId forzado en localStorage para el chat:', sessionId)
+
+      // Inicializar el widget de chat
+      // El Chat Trigger recibirá este sessionId y cargará la memoria sembrada
       createChat({
         webhookUrl: `https://n8n.cuanticode.com/webhook/354665b2-594c-4de5-a9fe-b359c888f272/chat`,
         webhookConfig: {
@@ -270,17 +329,16 @@ export default function OnboardingPage() {
             'Content-Type': 'application/json'
           }
         },
-        metadata: { sessionId }, // Pasar el ID de sesión como metadata
+        metadata: { sessionId }, // Para debug/lookup en n8n
         target: '#chat-container',
         mode: 'window',
         showWelcomeScreen: true,
-        initialMessages, // Usar los mensajes iniciales dinámicos
-        enableStreaming: true
+        loadPreviousSession: true, // Cargar memoria sembrada por n8n
+        initialMessages,
+        allowFileUploads: false
       });
 
       console.log("[v0] Chat inicializado con Webhook fijo y ID:", sessionId);
-      console.log("[v0] Respuesta del Webhook del formulario:", data); // Imprimir la respuesta del webhook
-      setManzanita(data);
       return data;
     } catch (error) {
       console.error("Error sending to webhook:", error);
@@ -350,9 +408,25 @@ export default function OnboardingPage() {
           },
           body: JSON.stringify(fullFormData)
         })
-        const data = await response.json()
-        setManzanita(data)
-        console.log("[v0] manzanita response:", data)
+        
+        console.log("[v0] Response status:", response.status)
+        
+        // Manejar respuestas no-JSON graciosamente
+        const responseText = await response.text()
+        console.log("[v0] Response body:", responseText)
+        
+        let data = null
+        if (responseText) {
+          try {
+            data = JSON.parse(responseText)
+            setManzanita(data)
+            console.log("[v0] manzanita response:", data)
+          } catch (parseError) {
+            console.warn("[v0] Response is not JSON:", responseText)
+          }
+        } else {
+          console.warn("[v0] Empty response from webhook")
+        }
       } catch (error) {
         console.error("[v0] Error sending to webhook:", error)
       }
@@ -383,6 +457,8 @@ export default function OnboardingPage() {
         setIsSending(true)
         await sendToWebhook()
         setIsSending(false)
+        // Limpiar sessionId para que la próxima visita sea una sesión nueva
+        clearSessionId()
         setTimeout(() => setIsComplete(true), 2000)
       }
       setChatMessages(prev => [...prev, { role: 'ai', content: aiResponse }])
