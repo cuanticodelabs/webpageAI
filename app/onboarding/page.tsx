@@ -1,12 +1,12 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useRef } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Textarea } from "@/components/ui/textarea"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { ArrowLeft, ArrowRight, Send, CheckCircle2 } from "lucide-react"
+import { ArrowLeft, ArrowRight, CheckCircle2 } from "lucide-react"
 import Link from "next/link"
 import { createChat } from '@n8n/chat';
 import '@n8n/chat/style.css';
@@ -198,31 +198,35 @@ const getOrCreateSessionId = (): string => {
   if (typeof window === 'undefined') return uuidv4() // SSR fallback
   
   const STORAGE_KEY = 'cuanticode_session_id'
-  let storedId = localStorage.getItem(STORAGE_KEY)
+  const existingId = localStorage.getItem(STORAGE_KEY)
+  const sessionId = existingId ?? uuidv4()
   
-  if (!storedId) {
-    storedId = uuidv4()
-    localStorage.setItem(STORAGE_KEY, storedId)
+  if (!existingId) {
+    localStorage.setItem(STORAGE_KEY, sessionId)
   }
   
   // Sincronizar con las keys que usa el widget @n8n/chat
   // Esto asegura que el Chat Trigger reciba el mismo sessionId
-  localStorage.setItem('n8n-chat/sessionId', storedId)
-  localStorage.setItem('sessionId', storedId) // compatibilidad
+  localStorage.setItem('n8n-chat/sessionId', sessionId)
+  localStorage.setItem('sessionId', sessionId) // compatibilidad
   
-  console.log('[v0] SessionId inicializado:', storedId)
+  console.log('[v0] SessionId inicializado:', sessionId)
   
-  return storedId
+  return sessionId
 }
 
 // Función para limpiar sessionId (llamar al completar el proceso)
 // Limpia todas las keys relacionadas para que la próxima visita sea una sesión nueva
 const clearSessionId = (): void => {
   if (typeof window !== 'undefined') {
+    // Keys propias
     localStorage.removeItem('cuanticode_session_id')
+    // Keys del widget @n8n/chat (todas las variantes conocidas)
     localStorage.removeItem('n8n-chat/sessionId')
+    localStorage.removeItem('n8n-chat-sessionId')
+    localStorage.removeItem('n8n-chat/messages')  // También limpiar mensajes previos
     localStorage.removeItem('sessionId')
-    console.log('[v0] SessionId limpiado de localStorage')
+    console.log('[v0] SessionId y datos de chat limpiados de localStorage')
   }
 }
 
@@ -243,13 +247,12 @@ export default function OnboardingPage() {
   })
   const [phase1Answers, setPhase1Answers] = useState<string[]>([])
   const [phase2Answers, setPhase2Answers] = useState<string[]>([])
-  const [chatMessages, setChatMessages] = useState<{role: 'ai' | 'user', content: string}[]>([])
-  const [chatInput, setChatInput] = useState("")
-  const [chatStep, setChatStep] = useState(0)
   const [isComplete, setIsComplete] = useState(false)
+  const [chatInitialized, setChatInitialized] = useState(false)
   const [selectedOption, setSelectedOption] = useState<string | null>(null)
-  const [isSending, setIsSending] = useState(false)
   const [manzanita, setManzanita] = useState<any>(null)
+  const [isSubmitting, setIsSubmitting] = useState(false)
+  const chatContainerRef = useRef<HTMLDivElement>(null)
 
   const totalPhase1Questions = t.phase1Questions.length
 
@@ -262,87 +265,62 @@ export default function OnboardingPage() {
     )
   }
 
-  const sendToWebhook = async () => {
-    const payload = {
-      contactInfo,
-      phase1Answers: t.phase1Questions.map((q, i) => ({
-        question: q.question,
-        answer: phase1Answers[i] || ""
-      })),
-      phase2Answers: t.phase2Questions.map((q, i) => ({
-        question: q.question,
-        answer: phase2Answers[i] || ""
-      })),
-      chatMessages,
-      language: lang,
-      timestamp: new Date().toISOString(),
-      sessionId // Incluir el ID de sesión en el payload
-    };
+  // Inicializar el chat de n8n cuando entramos a Phase 3
+  const initializeN8nChat = () => {
+    if (chatInitialized || !chatContainerRef.current) return
 
-    console.log("[v0] Payload a enviar:", JSON.stringify(payload, null, 2)); // Imprimir el payload completo con formato
+    // CRÍTICO: Limpiar cualquier sessionId previo del widget
+    localStorage.removeItem('n8n-chat/sessionId')
+    localStorage.removeItem('n8n-chat-sessionId')
+    localStorage.removeItem('n8n-chat/messages')
+    
+    console.log('[v0] ===== SESIÓN DE CHAT =====')
+    console.log('[v0] Master sessionId:', sessionId)
+    console.log('[v0] =============================')
 
     try {
-      const response = await fetch("https://n8n.cuanticode.com/webhook-test/onboarding/intake", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify(payload)
-      });
-
-      console.log("[v0] sendToWebhook - Response status:", response.status)
-      
-      // Manejar respuestas no-JSON graciosamente
-      const responseText = await response.text()
-      let data = null
-      
-      if (responseText) {
-        try {
-          data = JSON.parse(responseText)
-          console.log("[v0] Respuesta del Webhook del formulario:", data)
-          setManzanita(data)
-        } catch (parseError) {
-          console.warn("[v0] Response is not JSON:", responseText)
-        }
-      } else {
-        console.warn("[v0] Empty response from webhook - esto es normal si n8n no tiene Respond to Webhook")
-      }
-
-      // Determinar los mensajes iniciales según el idioma seleccionado
-      const initialMessages = lang === 'es' 
-        ? ['¡Hola! 👋', '¿En qué puedo ayudarte hoy?'] 
-        : ['Hello! 👋', 'How can I help you today?'];
-
-      // IMPORTANTE: Forzar el sessionId en localStorage ANTES de crear el chat
-      // El widget @n8n/chat lee de 'n8n-chat/sessionId' para enviarlo al Chat Trigger
-      localStorage.setItem('n8n-chat/sessionId', sessionId)
-      localStorage.setItem('sessionId', sessionId)
-      console.log('[v0] SessionId forzado en localStorage para el chat:', sessionId)
-
-      // Inicializar el widget de chat
-      // El Chat Trigger recibirá este sessionId y cargará la memoria sembrada
+      // Inicializar el widget de chat de n8n
+      // IMPORTANTE: Pasar sessionId directamente como config, no solo en metadata
       createChat({
-        webhookUrl: `https://n8n.cuanticode.com/webhook/354665b2-594c-4de5-a9fe-b359c888f272/chat`,
-        webhookConfig: {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json'
+        webhookUrl: 'https://n8n.cuanticode.com/webhook/354665b2-594c-4de5-a9fe-b359c888f272/chat',
+        // sessionId directo - esta es la forma correcta de forzar el sessionId
+        sessionId: sessionId,
+        metadata: { 
+          sessionId,
+          cuanticodeSessionId: sessionId
+        },
+        target: '#n8n-chat-container',
+        mode: 'fullscreen',
+        showWelcomeScreen: true,
+        loadPreviousSession: false,
+        allowFileUploads: false,
+        i18n: {
+          [lang]: {
+            title: lang === 'es' ? '¡Hola! 👋' : 'Hello! 👋',
+            subtitle: lang === 'es' 
+              ? 'Soy tu asistente de IA. ¿En qué puedo ayudarte?' 
+              : "I'm your AI assistant. How can I help you?",
+            getStarted: lang === 'es' ? 'Iniciar chat' : 'Start chat',
+            inputPlaceholder: lang === 'es' ? 'Escribe tu mensaje...' : 'Type your message...',
           }
         },
-        metadata: { sessionId }, // Para debug/lookup en n8n
-        target: '#chat-container',
-        mode: 'window',
-        showWelcomeScreen: true,
-        loadPreviousSession: true, // Cargar memoria sembrada por n8n
-        initialMessages,
-        allowFileUploads: false
+        defaultLanguage: lang
       });
 
-      console.log("[v0] Chat inicializado con Webhook fijo y ID:", sessionId);
-      return data;
+      // Forzar el sessionId en localStorage DESPUÉS de crear el chat
+      // Esto sobreescribe cualquier sessionId que el widget haya generado
+      setTimeout(() => {
+        localStorage.setItem('n8n-chat/sessionId', sessionId)
+        localStorage.setItem('n8n-chat-sessionId', sessionId)
+        localStorage.setItem('sessionId', sessionId)
+        console.log('[v0] SessionId forzado post-init:', sessionId)
+        console.log('[v0] n8n-chat/sessionId ahora:', localStorage.getItem('n8n-chat/sessionId'))
+      }, 100)
+
+      setChatInitialized(true)
+      console.log("[v0] Chat inicializado con sessionId:", sessionId)
     } catch (error) {
-      console.error("Error sending to webhook:", error);
-      return null;
+      console.error("[v0] Error inicializando chat:", error);
     }
   }
   const totalPhase2Questions = t.phase2Questions.length
@@ -399,9 +377,12 @@ export default function OnboardingPage() {
       // Print JSON to console
       console.log("[v0] Full Form JSON:", JSON.stringify(fullFormData, null, 2))
       
-      // Send to webhook
+      // Mostrar estado de carga
+      setIsSubmitting(true)
+      
+      // Send to webhook y esperar respuesta
       try {
-        const response = await fetch("https://n8n.cuanticode.com/webhook-test/onboarding/intake", {
+        const response = await fetch("https://n8n.cuanticode.com/webhook/onboarding/intake", {
           method: "POST",
           headers: {
             "Content-Type": "application/json"
@@ -410,60 +391,37 @@ export default function OnboardingPage() {
         })
         
         console.log("[v0] Response status:", response.status)
-        
-        // Manejar respuestas no-JSON graciosamente
         const responseText = await response.text()
         console.log("[v0] Response body:", responseText)
         
-        let data = null
         if (responseText) {
           try {
-            data = JSON.parse(responseText)
+            const data = JSON.parse(responseText)
             setManzanita(data)
             console.log("[v0] manzanita response:", data)
           } catch (parseError) {
             console.warn("[v0] Response is not JSON:", responseText)
           }
-        } else {
-          console.warn("[v0] Empty response from webhook")
         }
       } catch (error) {
         console.error("[v0] Error sending to webhook:", error)
+      } finally {
+        setIsSubmitting(false)
+        setCurrentPhase(3)
       }
-      
-      setCurrentPhase(3)
-      setChatMessages([{ role: 'ai', content: t.phase3.initialMessage }])
     }
   }
 
-  const handleChatSend = async () => {
-    if (!chatInput.trim()) return
-    
-    const newMessages = [...chatMessages, { role: 'user' as const, content: chatInput }]
-    setChatMessages(newMessages)
-    setChatInput("")
-    
-    setTimeout(async () => {
-      let aiResponse = ""
-      if (chatStep === 0) {
-        aiResponse = t.phase3.followUp1
-        setChatStep(1)
-      } else if (chatStep === 1) {
-        aiResponse = t.phase3.followUp2
-        setChatStep(2)
-      } else {
-        aiResponse = t.phase3.finalMessage
-        setChatStep(3)
-        setIsSending(true)
-        await sendToWebhook()
-        setIsSending(false)
-        // Limpiar sessionId para que la próxima visita sea una sesión nueva
-        clearSessionId()
-        setTimeout(() => setIsComplete(true), 2000)
-      }
-      setChatMessages(prev => [...prev, { role: 'ai', content: aiResponse }])
-    }, 1000)
-  }
+  // Efecto para inicializar el chat de n8n cuando entramos a Phase 3
+  useEffect(() => {
+    if (currentPhase === 3 && !chatInitialized && chatContainerRef.current) {
+      // Delay más largo para asegurar que el DOM esté completamente listo
+      const timer = setTimeout(() => {
+        initializeN8nChat()
+      }, 300)
+      return () => clearTimeout(timer)
+    }
+  }, [currentPhase, chatInitialized])
 
   const getProgress = () => {
     if (currentPhase === 1) {
@@ -471,7 +429,8 @@ export default function OnboardingPage() {
     } else if (currentPhase === 2) {
       return 33 + ((currentQuestion + 1) / totalPhase2Questions) * 33
     } else {
-      return 66 + (chatStep / 3) * 34
+      // En Phase 3 el progreso es 100% porque el chat ya está activo
+      return 100
     }
   }
 
@@ -690,24 +649,34 @@ export default function OnboardingPage() {
                       setCurrentQuestion(totalPhase1Questions - 1)
                     }
                   }}
+                  disabled={isSubmitting}
                 >
                   <ArrowLeft className="w-4 h-4 mr-2" />
                   {t.back}
                 </Button>
                 <Button
                   onClick={() => handlePhase2Answer(phase2Answers[currentQuestion] || "")}
-                  disabled={!phase2Answers[currentQuestion]?.trim()}
+                  disabled={!phase2Answers[currentQuestion]?.trim() || isSubmitting}
                   className="bg-gray-900 hover:bg-gray-800"
                 >
-                  {t.next}
-                  <ArrowRight className="w-4 h-4 ml-2" />
+                  {isSubmitting ? (
+                    <>
+                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                      {lang === 'es' ? 'Enviando...' : 'Sending...'}
+                    </>
+                  ) : (
+                    <>
+                      {t.next}
+                      <ArrowRight className="w-4 h-4 ml-2" />
+                    </>
+                  )}
                 </Button>
               </div>
             </CardContent>
           </Card>
         )}
 
-        {/* Phase 3: Chat */}
+        {/* Phase 3: Chat con n8n */}
         {currentPhase === 3 && (
           <Card className="border-0 shadow-lg">
             <CardContent className="p-8">
@@ -716,50 +685,25 @@ export default function OnboardingPage() {
                 <p className="text-sm text-gray-500">{t.phase3.subtitle}</p>
               </div>
               
-              {/* Chat Messages */}
-              <div className="bg-gray-50 rounded-lg p-6 h-[450px] overflow-y-auto mb-6 space-y-4">
-                {chatMessages.map((msg, index) => (
-                  <div
-                    key={index}
-                    className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}
-                  >
-                    <div
-                      className={`max-w-[80%] p-3 rounded-lg ${
-                        msg.role === 'user'
-                          ? 'bg-gray-900 text-white'
-                          : 'bg-white border border-gray-200'
-                      }`}
-                    >
-                      {msg.content}
+              {/* Wrapper con position relative para el loading overlay */}
+              <div className="relative min-h-[500px]">
+                {/* Loading overlay - separado del contenedor del chat */}
+                {!chatInitialized && (
+                  <div className="absolute inset-0 bg-gray-50 rounded-lg flex items-center justify-center z-10">
+                    <div className="text-center">
+                      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900 mx-auto mb-4"></div>
+                      <p className="text-gray-500">{lang === 'es' ? 'Iniciando chat...' : 'Starting chat...'}</p>
                     </div>
                   </div>
-                ))}
+                )}
+                
+                {/* Contenedor del Chat de n8n - React no controla su contenido interno */}
+                <div 
+                  ref={chatContainerRef}
+                  id="n8n-chat-container" 
+                  className="bg-gray-50 rounded-lg min-h-[500px] overflow-hidden"
+                />
               </div>
-
-              {/* Chat Input */}
-              {chatStep < 3 && (
-                <div className="flex gap-2">
-                  <Textarea
-                    placeholder={t.phase3.placeholder}
-                    value={chatInput}
-                    onChange={(e) => setChatInput(e.target.value)}
-                    className="min-h-[60px]"
-                    onKeyDown={(e) => {
-                      if (e.key === 'Enter' && !e.shiftKey) {
-                        e.preventDefault()
-                        handleChatSend()
-                      }
-                    }}
-                  />
-                  <Button
-                    onClick={handleChatSend}
-                    disabled={!chatInput.trim()}
-                    className="bg-gray-900 hover:bg-gray-800 px-4"
-                  >
-                    <Send className="w-4 h-4" />
-                  </Button>
-                </div>
-              )}
             </CardContent>
           </Card>
         )}
