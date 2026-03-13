@@ -8,9 +8,17 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { ArrowLeft, ArrowRight, CheckCircle2 } from "lucide-react"
 import Link from "next/link"
+import { useRouter } from "next/navigation"
 import { createChat } from '@n8n/chat';
 import '@n8n/chat/style.css';
-import { v4 as uuidv4 } from 'uuid';
+
+const createSessionId = (): string => {
+  if (typeof crypto !== "undefined" && typeof crypto.randomUUID === "function") {
+    return crypto.randomUUID()
+  }
+
+  return `${Date.now()}-${Math.random().toString(16).slice(2)}`
+}
 
 const translations = {
   en: {
@@ -93,6 +101,9 @@ const translations = {
     phase3: {
       title: "AI Consultation",
       subtitle: "Let's discuss your needs in detail.",
+      completeButton: "Finish and Exit",
+      completingButton: "Finishing...",
+      redirecting: "Redirecting to home...",
       initialMessage: "Welcome to the AI consultation phase!",
       followUp1: "Can you tell me more about your goals?",
       followUp2: "What challenges are you currently facing?",
@@ -180,6 +191,9 @@ const translations = {
     phase3: {
       title: "AI Consultation",
       subtitle: "Let's discuss your needs in detail.",
+      completeButton: "Finalizar y salir",
+      completingButton: "Finalizando...",
+      redirecting: "Redirigiendo al inicio...",
       initialMessage: "Welcome to the AI consultation phase!",
       followUp1: "Can you tell me more about your goals?",
       followUp2: "What challenges are you currently facing?",
@@ -195,11 +209,11 @@ const translations = {
 // 2. Sembrar memoria en n8n (subworkflow)
 // 3. Widget @n8n/chat (Chat Trigger en workflow 2)
 const getOrCreateSessionId = (): string => {
-  if (typeof window === 'undefined') return uuidv4() // SSR fallback
+  if (typeof window === 'undefined') return createSessionId() // SSR fallback
   
   const STORAGE_KEY = 'cuanticode_session_id'
   const existingId = localStorage.getItem(STORAGE_KEY)
-  const sessionId = existingId ?? uuidv4()
+  const sessionId = existingId ?? createSessionId()
   
   if (!existingId) {
     localStorage.setItem(STORAGE_KEY, sessionId)
@@ -231,6 +245,8 @@ const clearSessionId = (): void => {
 }
 
 export default function OnboardingPage() {
+  const router = useRouter()
+
   // Generar o recuperar sessionId persistente (sobrevive recargas de página)
   const [sessionId] = useState(() => getOrCreateSessionId())
   
@@ -252,6 +268,7 @@ export default function OnboardingPage() {
   const [selectedOption, setSelectedOption] = useState<string | null>(null)
   const [manzanita, setManzanita] = useState<any>(null)
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [isFinishing, setIsFinishing] = useState(false)
   const chatContainerRef = useRef<HTMLDivElement>(null)
 
   const totalPhase1Questions = t.phase1Questions.length
@@ -305,7 +322,7 @@ export default function OnboardingPage() {
           }
         },
         defaultLanguage: lang
-      });
+      } as any);
 
       // Forzar el sessionId en localStorage DESPUÉS de crear el chat
       // Esto sobreescribe cualquier sessionId que el widget haya generado
@@ -423,6 +440,48 @@ export default function OnboardingPage() {
     }
   }, [currentPhase, chatInitialized])
 
+  // Redireccionar automáticamente al inicio después de mostrar agradecimiento
+  useEffect(() => {
+    if (!isComplete) return
+
+    const timer = setTimeout(() => {
+      router.push("/")
+    }, 2500)
+
+    return () => clearTimeout(timer)
+  }, [isComplete, router])
+
+  const handleFinishPhase3 = async () => {
+    if (isFinishing) return
+
+    setIsFinishing(true)
+
+    try {
+      const payload = {
+        sessionId,
+        language: lang,
+        timestamp: new Date().toISOString(),
+        source: "onboarding-phase-3-exit",
+      }
+
+      const response = await fetch("https://n8n.cuanticode.com/webhook-test/agentic-evaluator", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(payload),
+      })
+
+      console.log("[v0] Evaluator webhook status:", response.status)
+    } catch (error) {
+      console.error("[v0] Error enviando sessionId al evaluator:", error)
+    } finally {
+      clearSessionId()
+      setIsComplete(true)
+      setIsFinishing(false)
+    }
+  }
+
   const getProgress = () => {
     if (currentPhase === 1) {
       return ((currentQuestion + 1) / totalPhase1Questions) * 33
@@ -444,6 +503,7 @@ export default function OnboardingPage() {
             </div>
             <h1 className="text-2xl font-bold">{t.thankYou.title}</h1>
             <p className="text-gray-600">{t.thankYou.subtitle}</p>
+            <p className="text-sm text-gray-500">{t.phase3.redirecting}</p>
             <Link href="/">
               <Button className="bg-gray-900 hover:bg-gray-800">{t.thankYou.backHome}</Button>
             </Link>
@@ -703,6 +763,16 @@ export default function OnboardingPage() {
                   id="n8n-chat-container" 
                   className="bg-gray-50 rounded-lg min-h-[500px] overflow-hidden"
                 />
+              </div>
+
+              <div className="mt-6 flex justify-end">
+                <Button
+                  onClick={handleFinishPhase3}
+                  disabled={!chatInitialized || isFinishing}
+                  className="bg-gray-900 hover:bg-gray-800"
+                >
+                  {isFinishing ? t.phase3.completingButton : t.phase3.completeButton}
+                </Button>
               </div>
             </CardContent>
           </Card>
