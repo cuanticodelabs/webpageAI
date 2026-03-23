@@ -117,10 +117,10 @@ const translations = {
   es: {
     nav: { services: "Servicios", process: "Proceso", team: "Equipo", contact: "Contacto" },
     hero: {
-      title: "El upgrade que tu empresa necesita",
-      subtitle: "Expertos especialistas en tecnología, automatización e IA aplicada",
-      description: "Innovación y Desarrollo que se integra y da valor a tu negocio",
-      badges: ["Diagnostico ejecutivo", "Pruebas de factibilidad", "Quick Wins funcionales"],
+      title: "El upgrade que tu negocio necesita",
+      subtitle: "Especialistas en tecnología, automatización e IA aplicada",
+      description: "Conoce a nuestro Equipo de alto rendimiento",
+      badges: ["Diagnostico", "Factibilidad", "Desarrollo Quick Wins funcionales"],
       cta: "Solicita presupuesto ahora"
     },
     warning: "Cuando la tecnología no está alineada al negocio, el crecimiento se frena y los costos se disparan.",
@@ -320,7 +320,7 @@ export default function LandingPage() {
       </a>
 
       {/* Hero Section */}
-      <section className="relative overflow-hidden h-screen pt-10 md:pt-0">
+      <section className="relative overflow-hidden h-screen pt-20 md:pt-0">
         <div className="absolute inset-0 z-0 h-full">
           <LetterGlitch
             glitchColors={['#042f2e', '#0a1f38', '#2dd4bf']}
@@ -332,7 +332,7 @@ export default function LandingPage() {
         </div>
         <div className="absolute inset-0 z-[1] h-full bg-[#0a1f38]/60" />
         <div className="relative z-10 w-full max-w-[1400px] mx-auto px-6 md:px-12 lg:px-16 h-full flex items-center">
-          <div className="max-w-4xl mx-auto text-center w-full -mt-32">
+          <div className="max-w-4xl mx-auto text-center w-full md:-mt-32">
             <div className="border-2 border-teal-500 rounded-2xl bg-[#042f2e]/60 backdrop-blur-sm p-6 md:p-8 space-y-4 mb-8">
               <h2 className="text-2xl md:text-3xl lg:text-4xl font-bold text-white text-balance">
                 {t.hero.title}
