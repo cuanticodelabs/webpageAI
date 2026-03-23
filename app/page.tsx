@@ -334,6 +334,9 @@ export default function LandingPage() {
         <div className="relative z-10 w-full max-w-[1400px] mx-auto px-6 md:px-12 lg:px-16 h-full flex items-center">
           <div className="max-w-4xl mx-auto text-center w-full md:-mt-32">
             <div className="border-2 border-teal-500 rounded-2xl bg-[#042f2e]/60 backdrop-blur-sm p-6 md:p-8 space-y-4 mb-8">
+              <div className="flex justify-center">
+                <img src="/images/atom.png" alt="" className="h-20 w-20 object-contain" />
+              </div>
               <h2 className="text-2xl md:text-3xl lg:text-4xl font-bold text-white text-balance">
                 {t.hero.title}
               </h2>
@@ -351,9 +354,6 @@ export default function LandingPage() {
                   parentClassName="text-xl md:text-2xl lg:text-3xl font-semibold text-cyan-400"
                 />
               </div>
-              <p className="text-lg md:text-xl text-gray-200">
-                {t.hero.description}
-              </p>
               <div className="flex flex-wrap justify-center gap-3 pt-4">
                 <Badge className="bg-white/20 text-white border-white/30 backdrop-blur-sm px-3 py-1.5 text-sm">
                   <span className="w-2 h-2 bg-green-400 rounded-full mr-2 animate-pulse" />

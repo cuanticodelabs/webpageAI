@@ -7,7 +7,7 @@ export const metadata: Metadata = {
   description: "Created by Cuanticode labs.",
   generator: "Cuanticodelabs",
   icons: {
-    icon: "/images/teoh.png",
+    icon: "/images/atom.png",
   },
 }
 
