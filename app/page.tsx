@@ -22,9 +22,9 @@ const translations = {
   en: {
     nav: { services: "Services", process: "Process", team: "Team", contact: "Contact" },
     hero: {
-      title: "We don't just do AI",
-      subtitle: "We build business impact",
-      description: "We deliver software, AI, and automation that scale businesses",
+      title: "We build business impact",
+      subtitle: "We deliver business results",
+      description: "We deliver software and automation that scale businesses",
       badges: ["Executive Diagnosis", "Feasibility Testing", "Functional Quick Wins"],
       cta: "Start scaling my business now"
     },
@@ -46,7 +46,7 @@ const translations = {
         { title: "Executive Diagnosis", desc: "We identify where your company leaks time, money and resources." },
         { title: "Feasibility Testing", desc: "We validate if that technology idea makes business sense." },
         { title: "Custom Development", desc: "We build internal tools that work with how you operate." },
-        { title: "AI Integration", desc: "Chatbots, agents and assistants that automate repetitive tasks." },
+        // { title: "AI Integration", desc: "Chatbots, agents and assistants that automate repetitive tasks." },
         { title: "Process Automation", desc: "We digitize operations and eliminate manual errors." },
         { title: "Technical Enablement", desc: "We train your team to grow independently." }
       ],
@@ -110,7 +110,7 @@ const translations = {
       team: "Team",
       recognitions: "Recognitions",
       plans: "Plans",
-      tagline: "Growth powered by technology, automation and applied AI."
+      tagline: "Growth powered by technology and automation."
     },
     btn: { diagnosis: "Diagnosis", execDiag: "Executive Diagnosis" }
   },
@@ -118,7 +118,7 @@ const translations = {
     nav: { services: "Servicios", process: "Proceso", team: "Equipo", contact: "Contacto" },
     hero: {
       title: "El upgrade que tu negocio necesita",
-      subtitle: "Especialistas en tecnología, automatización e IA aplicada",
+      subtitle: "Especialistas en tecnología y automatización",
       description: "Conoce a nuestro Equipo de alto rendimiento",
       badges: ["Diagnostico", "Factibilidad", "Desarrollo Quick Wins funcionales"],
       cta: "Solicita presupuesto ahora"
@@ -141,7 +141,7 @@ const translations = {
         { title: "Diagnóstico ", desc: "Identificamos dónde tu empresa pierde tiempo, dinero y recursos." },
         { title: "Factibilidad", desc: "Validamos si esa idea de tecnología tiene sentido de negocio." },
         { title: "Desarrollo", desc: "Construimos herramientas internas que funcionan con tu operación." },
-        { title: "Integración", desc: "Integramos el Software a tu stack tecnológico" },
+        // { title: "Integración", desc: "Integramos el Software a tu stack tecnológico" },
         { title: "Paso a Producción", desc: "Desplegamos procesos certificados y validados" },
         { title: "Continuidad Analítica", desc: "No te compliques, si lo deseas nos quedamos manteniendo el Workflow" }
       ],
@@ -174,14 +174,14 @@ const translations = {
       },
       juancarlos: {
         name: "Juan Carlos Hernandez",
-        role: "CMO",
-        badge: "Crecimiento y Posicionamiento",
-        desc: ["Ingeniero Civil Informatico UdeC", "Consultor senior en innovacion y transformacion digital"],
-        expert: "Especialista en estrategia de producto, desarrollo agil y validacion de mercado."
+        role: "CTO",
+        badge: "Arquitectura y Tecnologia",
+        desc: ["Ingeniero Civil Informatico UdeC","Desarrollador FullStack", "Líder tecnico en proyectos de desarrollo de software e integración tecnológica"],
+        expert: "Especialista en estrategia de producto, desarrollo agil y jefe de proyecto"
       },
       julio: {
         name: "Julio Zapata",
-        role: "CTO",
+        role: "CFO",
         badge: "Finanzas y Cumplimiento Normativo",
         desc: ["Ingeniero Civil Informatico UdeC", "Desarrollador full-stack y asesor tecnico en proyectos publicos y privados"],
         expert: "Foco en escalabilidad, cumplimiento y desarrollo de soluciones normativas."
@@ -191,9 +191,10 @@ const translations = {
       title: "Reconocimientos", 
       sub: "Reconocimiento a la innovacion y potencial tecnologico",
       items: [
-        { title: "Finalista Demo Day UDD 2024", desc: "Reconocimiento a la innovacion y presentacion de proyectos." },
+        
         { title: "Proyecto Innovador Incuba UDD 2025", desc: "Destacados por nuestra propuesta de valor disruptiva." },
-        { title: "2do Lugar Incuba Tec UDD", desc: "Premio a la viabilidad y potencial tecnologico de nuestra solucion." }
+        { title: "2do Lugar Incuba Tec UDD", desc: "Premio a la viabilidad y potencial tecnologico de nuestra solucion." },
+        { title: "Finalista Demo Day UDD 2024", desc: "Reconocimiento a la innovacion y presentacion de proyectos." }
       ]
     },
     cta: { title: "¿Listo para comenzar?", btn: "Solicita tu diagnóstico ejecutivo" },
@@ -205,7 +206,7 @@ const translations = {
       team: "Equipo",
       recognitions: "Reconocimientos",
       plans: "Planes",
-      tagline: "Crecimiento potenciado por tecnologia, automatizacion e IA aplicada."
+      tagline: "Crecimiento potenciado por tecnologia y automatizacion."
     },
     btn: { diagnosis: "Diagnóstico", execDiag: "Diagnóstico Ejecutivo" }
   }
@@ -230,6 +231,12 @@ export default function LandingPage() {
       element.scrollIntoView({ behavior: "smooth" })
     }
   }
+
+  const sendToWhatsApp = () => {
+    const message = `Hola, me gustaría comenzar el cuestionario.`;
+    const whatsappURL = `https://api.whatsapp.com/send?phone=56998644974&text=${encodeURIComponent(message)}`;
+    window.open(whatsappURL, '_blank');
+  };
 
   return (
     <div className="min-h-screen bg-[#0a1f38] text-gray-100" suppressHydrationWarning>
@@ -468,7 +475,7 @@ export default function LandingPage() {
             <div className="max-w-6xl mx-auto mb-12">
               {/* Desktop: simple 3-col grid, no connector lines */}
               <div className="hidden md:grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {[Target, CheckCircle2, Zap, Database, Cpu, BarChart3].map((Icon, index) => (
+                {[Target, CheckCircle2, Zap, Database, BarChart3].map((Icon, index) => (
                   <div key={index} className={`border ${index < 3 ? 'border-teal-900 hover:border-teal-500' : 'border-emerald-900 hover:border-emerald-500'} bg-[#0d2a4a] rounded-xl p-5 transition-all duration-300 hover:-translate-y-1`}>
                     <div className="flex items-center gap-3 mb-3">
                       <div className={`flex items-center justify-center h-7 w-7 rounded-full ${index < 3 ? 'bg-teal-500' : 'bg-emerald-500'} text-white font-bold text-xs flex-shrink-0`}>
@@ -486,7 +493,7 @@ export default function LandingPage() {
 
               {/* Mobile: vertical timeline, line centered on the circle height */}
               <div className="md:hidden flex flex-col">
-                {[Target, CheckCircle2, Zap, Database, Cpu, BarChart3].map((Icon, index) => (
+                {[Target, CheckCircle2, Zap, Database, BarChart3].map((Icon, index) => (
                   <div key={index} className="flex gap-4">
                     {/* Timeline spine */}
                     <div className="flex flex-col items-center w-8 flex-shrink-0">
