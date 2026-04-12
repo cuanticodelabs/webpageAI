@@ -206,7 +206,7 @@ const translations = {
       team: "Equipo",
       recognitions: "Reconocimientos",
       plans: "Planes",
-      tagline: "Crecimiento potenciado por tecnologia y automatizacion."
+      tagline: "Crecimiento potenciado por tecnología y automatización."
     },
     btn: { diagnosis: "Diagnóstico", execDiag: "Diagnóstico Ejecutivo" }
   }
