@@ -12,6 +12,7 @@ import {
 import Link from "next/link"
 import Image from "next/image"
 import { useInView } from "@/hooks/use-in-view"
+import ArtemisKpis from "@/components/ArtemisKpis"
 
 const translations = {
   en: {
@@ -444,6 +445,9 @@ export default function LandingPage() {
                   <p className="text-[10px] text-[#787774] mt-0.5">{lang === 'es' ? 'premios' : 'awards'}</p>
                 </div>
               </div>
+
+              {/* Artemis live KPIs */}
+              <ArtemisKpis />
             </div>
           </div>
         </div>

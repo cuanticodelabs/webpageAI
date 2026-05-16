@@ -1,5 +1,6 @@
 import type React from "react"
 import type { Metadata } from "next"
+import { GoogleAnalytics } from "@next/third-parties/google"
 import "./globals.css"
 
 export const metadata: Metadata = {
@@ -79,6 +80,53 @@ export const metadata: Metadata = {
   category: "technology",
 }
 
+const jsonLd = {
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "Organization",
+      "@id": "https://cuanticode.cl/#organization",
+      name: "CuantiCode Labs",
+      url: "https://cuanticode.cl",
+      logo: "https://cuanticode.cl/images/atom.png",
+      description:
+        "Firma de ingenieros civiles informáticos expertos en inteligencia artificial y automatización de procesos para empresas en Chile.",
+      address: {
+        "@type": "PostalAddress",
+        addressLocality: "Concepción",
+        addressCountry: "CL",
+      },
+      contactPoint: {
+        "@type": "ContactPoint",
+        telephone: "+56998644074",
+        contactType: "sales",
+        availableLanguage: ["Spanish", "English"],
+      },
+      sameAs: [
+        "https://www.linkedin.com/company/cuanticode",
+        "https://instagram.com/ia_entunegocio",
+      ],
+    },
+    {
+      "@type": "Person",
+      "@id": "https://cuanticode.cl/#hector",
+      name: "Héctor González Baeza",
+      jobTitle: "CEO & Fundador",
+      worksFor: { "@id": "https://cuanticode.cl/#organization" },
+      url: "https://www.linkedin.com/in/héctor-nicolás-gonzález-baeza-833059177/",
+      description:
+        "Ingeniero Civil Informático, MBA y Máster en Transformación Digital. Experto en automatización, Big Data e Inteligencia Artificial.",
+    },
+    {
+      "@type": "WebSite",
+      "@id": "https://cuanticode.cl/#website",
+      url: "https://cuanticode.cl",
+      name: "CuantiCode Labs",
+      publisher: { "@id": "https://cuanticode.cl/#organization" },
+    },
+  ],
+}
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -86,7 +134,14 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="es">
+      <head>
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+        />
+      </head>
       <body>{children}</body>
+      <GoogleAnalytics gaId="G-FJGHHR5FKB" />
     </html>
   )
 }
